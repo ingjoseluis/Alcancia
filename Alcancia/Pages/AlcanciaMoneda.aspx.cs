@@ -33,49 +33,60 @@ namespace Alcancia.Pages
                     GridView1.DataSource = listAlcancia_AlcMoneda;
                     GridView1.DataBind();
 
-                    var query = from item in listAlcancia_AlcMoneda
-                                group item by new { IdDenominacion = item.IdDenominacion } into g
-                                select new
-                                {
-                                    IdDenominacion = g.Key.IdDenominacion,
-                                    CantDenominacion = g.Sum(x => x.CantDenominacion),
-                                    MontoDenominacion = (g.Key.IdDenominacion * g.Sum(x => x.CantDenominacion))
-                                };
-
-                    GridView2.DataSource = query.ToList();
-                    GridView2.DataBind();
-
-                    var querytotal = from item in query
-                                     select new
-                                     {
-                                         CantMonedas = query.Sum(x => x.CantDenominacion),
-                                         MontoMonedas = query.Sum(x => x.MontoDenominacion)
-                                     };
-
-                    Alcancia_AlcGeneral alcancia_AlcGeneral = new Alcancia.Business.AlcGeneral().totalAlcancia(userId);
-
-                    Alcancia_AlcGeneral alc = new Alcancia_AlcGeneral();
-
-                    if (alcancia_AlcGeneral.IdAlcGeneral.Equals(0))
+                    if (listAlcancia_AlcMoneda.Count > 0)
                     {
-                        alc.UserId = userId;
-                        alc.CantMonedas = querytotal.FirstOrDefault().CantMonedas;
-                        alc.MontoMonedas = querytotal.FirstOrDefault().MontoMonedas;
+                        var query = from item in listAlcancia_AlcMoneda
+                                    group item by new { IdDenominacion = item.IdDenominacion } into g
+                                    select new
+                                    {
+                                        IdDenominacion = g.Key.IdDenominacion,
+                                        CantDenominacion = g.Sum(x => x.CantDenominacion),
+                                        MontoDenominacion = (g.Key.IdDenominacion * g.Sum(x => x.CantDenominacion))
+                                    };
 
-                        new Alcancia.Business.AlcGeneral().Insert(alc);
+                        GridView2.DataSource = query.ToList();
+                        GridView2.DataBind();
+
+                        var querytotal = from item in query
+                                         select new
+                                         {
+                                             CantMonedas = query.Sum(x => x.CantDenominacion),
+                                             MontoMonedas = query.Sum(x => x.MontoDenominacion)
+                                         };
+
+                        Alcancia_AlcGeneral alcancia_AlcGeneral = new Alcancia.Business.AlcGeneral().totalAlcancia(userId);
+
+                        Alcancia_AlcGeneral alc = new Alcancia_AlcGeneral();
+
+                        if (alcancia_AlcGeneral.IdAlcGeneral.Equals(0))
+                        {
+                            alc.UserId = userId;
+                            alc.CantMonedas = querytotal.FirstOrDefault().CantMonedas;
+                            alc.MontoMonedas = querytotal.FirstOrDefault().MontoMonedas;
+
+                            new Alcancia.Business.AlcGeneral().Insert(alc);
+                        }
+                        else
+                        {
+                            alc.IdAlcGeneral = alcancia_AlcGeneral.IdAlcGeneral;
+                            alc.UserId = userId;
+                            alc.CantMonedas = querytotal.FirstOrDefault().CantMonedas;
+                            alc.MontoMonedas = querytotal.FirstOrDefault().MontoMonedas;
+
+                            new Alcancia.Business.AlcGeneral().Update(alc);
+                        }
+
+                        GridView3.DataSource = querytotal.Distinct().ToList();
+                        GridView3.DataBind();
                     }
                     else
                     {
-                        alc.IdAlcGeneral = alcancia_AlcGeneral.IdAlcGeneral;
-                        alc.UserId = userId;
-                        alc.CantMonedas = querytotal.FirstOrDefault().CantMonedas;
-                        alc.MontoMonedas = querytotal.FirstOrDefault().MontoMonedas;
+                        GridView2.DataSource = listAlcancia_AlcMoneda;
+                        GridView2.DataBind();
 
-                        new Alcancia.Business.AlcGeneral().Update(alc);
+                        GridView3.DataSource = listAlcancia_AlcMoneda;
+                        GridView3.DataBind();
                     }
-
-                    GridView3.DataSource = querytotal.Distinct().ToList();
-                    GridView3.DataBind();
                 }
             }
             else
